@@ -98,6 +98,10 @@ class CellsMap < Hash
     self.min_by{|k,v|v.y}[1].y
   end
 
+  def << (cell)
+    self[cell.hash] = cell if cell.is_a? Cell
+  end
+
   def []=(key,val)
     super(key,val)
     cell_created(key,val)

@@ -66,15 +66,16 @@ post '/move' do
 
   prev_color = cells[new_cell.hash].nil? ? NEUTRAL_COLOR : cells[new_cell.hash].color
 
-  cells[new_cell.hash] = new_cell
+  cells << new_cell
 
   if prev_color != NEUTRAL_COLOR && prev_color != new_cell.color
     islands = cells.count_islands prev_color
-    if islands.count > 1
+    while islands.count > 1
       min_island = islands.min_by {|i| i[:cells_count]}
       cells.dfs(min_island[:root_y], min_island[:root_x], Hash.new,  prev_color) do |col, row|
         cells.delete cid(col, row)
       end
+      islands.delete min_island
     end
   end
 
