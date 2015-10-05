@@ -83,19 +83,19 @@ class CellsMap < Hash
   end
 
   def max_col
-    self.max_by{|k,v|v.x}[1].x
+    self.max_by{|_,v|v.x}[1].x
   end
 
   def min_col
-    self.min_by{|k,v|v.x}[1].x
+    self.min_by{|_,v|v.x}[1].x
   end
 
   def max_row
-    self.max_by{|k,v|v.y}[1].y
+    self.max_by{|_,v|v.y}[1].y
   end
 
   def min_row
-    self.min_by{|k,v|v.y}[1].y
+    self.min_by{|_,v|v.y}[1].y
   end
 
   def << (cell)
@@ -114,6 +114,7 @@ class CellsMap < Hash
         x: cell.x,
         y: cell.y
     }
+    val
   end
 
   def delete(key)

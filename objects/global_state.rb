@@ -1,9 +1,9 @@
 class GlobalState < GameObject
-  require_relative 'cells_map'
+  require_relative 'game_map'
   attr_accessor :cells, :fractions, :players
 
   def initialize
-    @cells = CellsMap.new
+    @cells = GameMap.new self
     @fractions = [
         Fraction.new(name: 'The Red', color: '#ff0000'),
         Fraction.new(name: 'The Blue', color: '#0000ff')
@@ -12,10 +12,20 @@ class GlobalState < GameObject
         Player.new(name: 'The Red', fraction: fractions[0]),
         Player.new(name: 'The Blue', fraction: fractions[1])
     ]
+    @cells << Cell.new(
+        x: 0,
+        y: 0,
+        fraction: @players[0].fraction
+    )
+    @cells << Cell.new(
+        x: 10,
+        y: 10,
+        fraction: @players[1].fraction
+    )
   end
 
   def cells_json
-    @cells.collect { |k,v| v.to_json }
+    @cells.collect { |_,v| v.to_json }
   end
 
   def to_json

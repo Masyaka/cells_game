@@ -10,7 +10,7 @@ class Cell < GameObject
   end
 
   def eql?(other)
-    @x == other.x && @y == other.y
+    x == other.x && y == other.y
   end
 
   def hash
@@ -18,15 +18,15 @@ class Cell < GameObject
   end
 
   def color
-    @fraction.color
+    fraction.color
   end
 
-  def to_json(options = {})
+  def to_json(_ = {})
     {
-        x: @x,
-        y: @y,
-        fraction_name: @fraction.name,
-        color: @fraction.color
+        x: x,
+        y: y,
+        fraction_name: fraction.name,
+        color: fraction.color
     }
   end
 end

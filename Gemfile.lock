@@ -6,7 +6,7 @@ GEM
     em-websocket (0.3.8)
       addressable (>= 2.1.1)
       eventmachine (>= 0.12.9)
-    eventmachine (1.0.7)
+    eventmachine (1.0.8)
     rack (1.6.4)
     rack-protection (1.5.3)
       rack
