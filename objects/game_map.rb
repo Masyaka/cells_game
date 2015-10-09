@@ -10,7 +10,7 @@ class GameMap < CellsMap
     super()
   end
 
-  def move (from_x, from_y, direction, player_name)
+  def move (from_x, from_y, direction, player)
     case direction
       when 'left'
         new_x = from_x - 1
@@ -29,7 +29,6 @@ class GameMap < CellsMap
         new_y = from_x
     end
 
-    player = global_state.players.find {|s| s.name == player_name}
     new_cell = Cell.new(x:new_x, y:new_y, fraction: player.fraction)
 
     prev_color = self[new_cell.hash].nil? ? NEUTRAL_COLOR : self[new_cell.hash].color

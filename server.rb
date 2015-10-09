@@ -40,8 +40,9 @@ post '/move' do
 	from_x = params[:from_x].to_i
 	from_y = params[:from_y].to_i
 	direction = params[:direction] # left/right/top/bottom
+  player = global_state.players.find {|s| s.name == params[:player_name]}
 
-  cells.move from_x, from_y, direction, params[:player_name]
+  cells.move from_x, from_y, direction, player
 
 	settings.sockets.each{|s| s.send(cells.changes.to_json)}
   cells.changes.clear

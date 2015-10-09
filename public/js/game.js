@@ -777,7 +777,7 @@ function onUp(pointer) {
         widthText.text = "Current X: " + currentX;
         heightText.text = "Current Y: " + currentY;
 
-        canvas.rect(x * canvasZoom, y * canvasZoom, canvasZoom, canvasZoom, pointer.color);
+        //canvas.rect(x * canvasZoom, y * canvasZoom, canvasZoom, canvasZoom, pointer.color);
     }
 
 }
