@@ -38,12 +38,13 @@ class GameMap < CellsMap
     if prev_color != NEUTRAL_COLOR && prev_color != new_cell.color
       clear_islands prev_color
     end
+    new_cell
   end
 
   def clear_islands (color)
     islands = self.count_islands color
     while islands.count > 1
-      min_island = islands.min_by {|i| i[:self_count]}
+      min_island = islands.min_by {|i| i[:cells_count]}
       self.dfs(min_island[:root_y], min_island[:root_x], Hash.new,  color) do |col, row|
         self.delete cid(col, row)
       end

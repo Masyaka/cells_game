@@ -1,5 +1,3 @@
-var IDE_HOOK = false;
-
 var game = new Phaser.Game(800, 600, Phaser.CANVAS, 'phaser-example', this);
 
 var currentX = 0, currentY = 0;
@@ -47,7 +45,7 @@ var isErase = false;
 var ci = 0;
 var color = 0;
 var palette = 0;
-var pmap = [0,1,2,3,4,5,6,7,8,9,'A','B','C','D','E','F'];
+//var pmap = [0,1,2,3,4,5,6,7,8,9,'A','B','C','D','E','F'];
 
 //  Data
 var frame = 1;
@@ -57,6 +55,12 @@ var timerCount = 0;
 var timer;
 
 var data;
+
+var activeCellIndication;
+
+var websocket;
+
+var fractions, cells;
 
 function resetData() {
 
@@ -236,7 +240,7 @@ function createUI() {
 
     ui = game.make.bitmapData(800, 32);
 
-    drawPalette();
+    // drawPalette();
 
     ui.addToWorld();
 
@@ -246,10 +250,10 @@ function createUI() {
 
     timerLabel = game.add.text(rightCol + 150, 8, "Timer: 0", style);
 
-    game.add.text(12, 9, pmap.join("\t"), { font: "14px Courier", fill: "#000", tabs: 32 });
-    game.add.text(11, 8, pmap.join("\t"), { font: "14px Courier", fill: "#ffff00", tabs: 32 });
+    //game.add.text(12, 9, pmap.join("\t"), { font: "14px Courier", fill: "#000", tabs: 32 });
+    //game.add.text(11, 8, pmap.join("\t"), { font: "14px Courier", fill: "#ffff00", tabs: 32 });
 
-    paletteArrow = game.add.sprite(8, 36, 'arrow');
+    // paletteArrow = game.add.sprite(8, 36, 'arrow');
 
     //  Change width
 
@@ -298,13 +302,11 @@ function createUI() {
     previewSizeDown.input.useHandCursor = true;
     previewSizeDown.events.onInputDown.add(decreasePreviewSize, this);
 
-
-
 }
 
 function createDrawingArea() {
 
-    game.create.grid('drawingGrid', 16 * canvasZoom, 16 * canvasZoom, canvasZoom, canvasZoom, 'rgba(0,191,243,0.8)');
+    game.create.grid('drawingGrid', 16 * canvasZoom, 16 * canvasZoom, canvasZoom, canvasZoom, 'rgba(0,191,243,0.3)');
 
     canvas = game.make.bitmapData(spriteWidth * canvasZoom, spriteHeight * canvasZoom);
     canvasBG = game.make.bitmapData(canvas.width + 2, canvas.height + 2);
@@ -313,14 +315,16 @@ function createDrawingArea() {
     canvasBG.rect(1, 1, canvasBG.width - 2, canvasBG.height - 2, '#3f5c67');
 
     var x = 10;
-    var y = 64;
+    var y = 10;
 
     canvasBG.addToWorld(x, y);
     canvasSprite = canvas.addToWorld(x + 1, y + 1);
     canvasGrid = game.add.sprite(x + 1, y + 1, 'drawingGrid');
     canvasGrid.crop(new Phaser.Rectangle(0, 0, spriteWidth * canvasZoom, spriteHeight * canvasZoom));
 
-
+    activeCellIndication = game.make.bitmapData(spriteWidth * canvasZoom, spriteHeight * canvasZoom);
+    //activeCellIndication.rect(0, 0, canvasBG.width / 2, canvasBG.height / 2, '#0f0');
+    activeCellIndication.addToWorld(x, y);
 }
 
 function resizeCanvas() {
@@ -459,58 +463,6 @@ function drawPalette() {
     }
 
     ui.copy('uiGrid');
-
-}
-
-function changePalette() {
-
-    palette++;
-
-    if (!game.create.palettes[palette])
-    {
-        palette = 0;
-    }
-
-    drawPalette();
-    refresh();
-
-}
-
-function setColor(i, p) {
-
-    if (typeof p !== 'undefined')
-    {
-        //  It came from a Keyboard Event, in which case the color index is in p, not i.
-        i = p;
-    }
-
-    if (i < 0)
-    {
-        i = 15;
-    }
-    else if (i >= 16)
-    {
-        i = 0;
-    }
-
-    colorIndex = i;
-    color = game.create.palettes[palette][pmap[colorIndex]];
-
-    paletteArrow.x = (i * 32) + 8;
-
-}
-
-function nextColor() {
-
-    var i = colorIndex + 1;
-    setColor(i);
-
-}
-
-function prevColor() {
-
-    var i = colorIndex - 1;
-    setColor(i);
 
 }
 
@@ -654,12 +606,11 @@ function create() {
 
     resetData();
 
-    canvas.rect(10 * canvasZoom, 10 * canvasZoom, canvasZoom, canvasZoom, "#ffffff");
+    //canvas.rect(10 * canvasZoom, 10 * canvasZoom, canvasZoom, canvasZoom, "#ffffff");
 
-    paint2({x: 3, y: 5, color: "#ffff00"});
     loadMap();
 
-    testWebSocket();
+    startWebSocket();
 
 }
 
@@ -671,7 +622,6 @@ function timerHandler() {
     }
 }
 
-var fractions, cells;
 function loadMap() {
     $.getJSON("/cells", function(data){
         //data = $.parseJson(data);
@@ -773,13 +723,12 @@ function onUp(pointer) {
     if (data[y][x] == col) {
         currentX = x;
         currentY = y;
-
         widthText.text = "Current X: " + currentX;
         heightText.text = "Current Y: " + currentY;
-
-        //canvas.rect(x * canvasZoom, y * canvasZoom, canvasZoom, canvasZoom, pointer.color);
+        activeCellIndication.clear();
+        activeCellIndication.rect(x * canvasZoom + 1, y * canvasZoom + 1, canvasZoom, canvasZoom, '#0f0');
+        activeCellIndication.clear(x * canvasZoom + 2, y * canvasZoom + 2, canvasZoom - 2, canvasZoom - 2, color);
     }
-
 }
 
 function paint(pointer) {
@@ -808,7 +757,7 @@ function paint(pointer) {
     }
     else
     {
-        data[y][x] = pmap[colorIndex];
+        //data[y][x] = pmap[colorIndex];
         canvas.rect(x * canvasZoom, y * canvasZoom, canvasZoom, canvasZoom, color);
         preview.rect(x * previewSize, y * previewSize, previewSize, previewSize, color);
     }
@@ -845,8 +794,7 @@ function paint2(pointer) {
 
 }
 
-var websocket;
-function testWebSocket() {
+function startWebSocket() {
     websocket = new WebSocket("ws:/" + window.location.hostname + ":4567/");
     websocket.onopen = function(evt) { onOpen(evt) };
     websocket.onclose = function(evt) { onClose(evt) };
