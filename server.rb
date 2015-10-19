@@ -6,10 +6,15 @@ require 'sinatra-websocket'
 require_relative 'config.rb'
 Dir["objects/*.rb"].each {|file| require_relative file }
 
-include CoordinateUtilities
+game = CellsGame.new
+game_state = game.game_state
 
-global_state = GlobalState.new
-cells = global_state.cells
+before do
+  if env['REQUEST_METHOD'] == 'POST' && env['CONTENT_TYPE'] == 'application/json'
+    request.body.rewind
+    @request_payload = JSON.parse request.body.read
+  end
+end
 
 get '/' do
   if !request.websocket?
@@ -19,9 +24,20 @@ get '/' do
       ws.onopen do
         settings.sockets << ws
       end
-      ws.onmessage do |msg|
 
+      ws.onmessage do |msg|
+        event_message = JSON.parse(msg)
+        event_name = event_message["eventName"]
+        target_method = game.method 'on_' + event_name
+        data = event_message["data"]
+
+        unless target_method.nil?
+          target_method.call(data)
+          settings.sockets.each{|s| s.send(game_state.changes.to_json)}
+          game_state.clear_changes
+        end
       end
+
       ws.onclose do
         warn('websocket closed')
         settings.sockets.delete(ws)
@@ -30,21 +46,16 @@ get '/' do
   end
 end
 
-get '/cells' do
+get '/state' do
 	content_type :json
-	response = global_state.to_json
+	response = game_state.to_json
 	response
 end
 
-post '/move' do
-	from_x = params[:from_x].to_i
-	from_y = params[:from_y].to_i
-	direction = params[:direction] # left/right/top/bottom
-  player = global_state.players.find {|s| s.name == params[:player_name]}
+options '/register' do
+  params.to_json
+end
 
-  cells.move from_x, from_y, direction, player
-
-	settings.sockets.each{|s| s.send(cells.changes.to_json)}
-  cells.changes.clear
-	true
+post '/register' do
+  @request_payload.to_json
 end

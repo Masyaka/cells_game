@@ -1,5 +1,7 @@
-class GlobalState < GameObject
+class GameState < GameObject
   require_relative 'game_map'
+  require_relative 'fraction'
+  require_relative 'player'
   attr_accessor :cells, :fractions, :players
 
   def initialize
@@ -34,5 +36,15 @@ class GlobalState < GameObject
         cells: cells_json,
         players: @players.collect { |n| n.to_json }
     }.to_json
+  end
+
+  def changes
+    {
+        cells: cells.changes
+    }
+  end
+
+  def clear_changes
+    cells.changes.clear
   end
 end

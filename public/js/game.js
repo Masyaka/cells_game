@@ -1,5 +1,19 @@
 var game = new Phaser.Game(800, 600, Phaser.CANVAS, 'phaser-example', this);
 
+var ActiveCellIndication = function(scope){
+    this.bitMapData = scope.game.make.bitmapData(scope.spriteWidth * scope.canvasZoom, scope.spriteHeight * scope.canvasZoom);
+
+    this.addToWorld = function(x, y){
+        this.bitMapData.addToWorld(x, y);
+    };
+
+    this.highLight = function(x, y){
+        this.bitMapData.clear();
+        this.bitMapData.rect(x * scope.canvasZoom + 1, y * scope.canvasZoom + 1, scope.canvasZoom, scope.canvasZoom, '#0f0');
+        this.bitMapData.clear(x * scope.canvasZoom + 2, y * scope.canvasZoom + 2, scope.canvasZoom - 2, scope.canvasZoom - 2, '#000');
+    }
+};
+
 var currentX = 0, currentY = 0;
 
 //  Dimensions
@@ -60,7 +74,33 @@ var activeCellIndication;
 
 var websocket;
 
-var fractions, cells;
+var  Cells, Fractions, Players, Fraction, Player;
+
+function create() {
+
+    //   So we can right-click to erase
+    document.body.oncontextmenu = function() { return false; };
+
+    Phaser.Canvas.setUserSelect(game.canvas, 'none');
+    Phaser.Canvas.setTouchAction(game.canvas, 'none');
+
+    game.stage.backgroundColor = '#505050';
+
+    createUI();
+    createDrawingArea();
+    createPreview();
+    activeCellIndication = new ActiveCellIndication(this);
+    activeCellIndication.addToWorld(10, 10);
+    createEventListeners();
+
+    resetData();
+
+    //canvas.rect(10 * canvasZoom, 10 * canvasZoom, canvasZoom, canvasZoom, "#ffffff");
+
+    loadState();
+
+    startWebSocket();
+}
 
 function resetData() {
 
@@ -322,9 +362,9 @@ function createDrawingArea() {
     canvasGrid = game.add.sprite(x + 1, y + 1, 'drawingGrid');
     canvasGrid.crop(new Phaser.Rectangle(0, 0, spriteWidth * canvasZoom, spriteHeight * canvasZoom));
 
-    activeCellIndication = game.make.bitmapData(spriteWidth * canvasZoom, spriteHeight * canvasZoom);
+
     //activeCellIndication.rect(0, 0, canvasBG.width / 2, canvasBG.height / 2, '#0f0');
-    activeCellIndication.addToWorld(x, y);
+
 }
 
 function resizeCanvas() {
@@ -392,53 +432,24 @@ function createEventListeners() {
 
     keys = game.input.keyboard.addKeys(
         {
-            'erase': Phaser.Keyboard.X,
+            //'erase': Phaser.Keyboard.X,
             'up': Phaser.Keyboard.UP,
             'down': Phaser.Keyboard.DOWN,
             'left': Phaser.Keyboard.LEFT,
-            'right': Phaser.Keyboard.RIGHT,
-            /*'a': Phaser.Keyboard.A,
-             's': Phaser.Keyboard.S,
-             'd': Phaser.Keyboard.D,
-             'w': Phaser.Keyboard.W*/
-            /*'color3': Phaser.Keyboard.THREE,
-             'color4': Phaser.Keyboard.FOUR,
-             'color5': Phaser.Keyboard.FIVE,
-             'color6': Phaser.Keyboard.SIX,
-             'color7': Phaser.Keyboard.SEVEN,
-             'color8': Phaser.Keyboard.EIGHT,
-             'color9': Phaser.Keyboard.NINE,
-             'color10': Phaser.Keyboard.A,
-             'color11': Phaser.Keyboard.B,
-             'color12': Phaser.Keyboard.C,
-             'color13': Phaser.Keyboard.D,
-             'color14': Phaser.Keyboard.E,
-             'color15': Phaser.Keyboard.F*/
+            'right': Phaser.Keyboard.RIGHT
         }
     );
 
-    keys.erase.onDown.add(cls, this);
+    //keys.erase.onDown.add(cls, this);
     keys.up.onDown.add(sendTop, this);
     keys.down.onDown.add(sendBottom, this);
     keys.left.onDown.add(sendLeft, this);
     keys.right.onDown.add(sendRight, this);
 
-    /*keys.a.onDown.add(sendLeft, this);
-     keys.s.onDown.add(sendBottom, this);
-     keys.d.onDown.add(sendRight, this);
-     keys.w.onDown.add(sendTop, this);*/
-    /*keys.changePalette.onDown.add(changePalette, this);
-
-     for (var i = 0; i < 16; i++)
-     {
-     keys['color' + i].onDown.add(setColor, this, 0, i);
-     }*/
-
     game.input.mouse.capture = true;
     game.input.onDown.add(onDown, this);
     game.input.onUp.add(onUp, this);
     game.input.addMoveCallback(paint, this);
-
 }
 
 function cls() {
@@ -483,20 +494,23 @@ function sendBottom() {
 }
 
 function sendAction(action) {
+    var data = {
+        "from_x": currentX,
+        "from_y": currentY,
+        "direction": action,
+        "player_name": $("#player").val()
+    };
     if (!timer) {
-        $.post('/move', {
-            "from_x": currentX,
-            "from_y": currentY,
-            "direction": action,
-            "player_name": $("#player").val()
-        }, function(data) {
+        /*$.post('/move', data, function(data) {
             timerCount = 1;
             timer = setInterval(timerHandler, 1000);
 
             console.log(data);
-        });
+        });*/
+        doSend("move", data);
+        timerCount = 1;
+        timer = setInterval(timerHandler, 1000);
     }
-
 }
 
 function increaseSize(sprite) {
@@ -589,31 +603,6 @@ function decreasePreviewSize() {
 
 }
 
-function create() {
-
-    //   So we can right-click to erase
-    document.body.oncontextmenu = function() { return false; };
-
-    Phaser.Canvas.setUserSelect(game.canvas, 'none');
-    Phaser.Canvas.setTouchAction(game.canvas, 'none');
-
-    game.stage.backgroundColor = '#505050';
-
-    createUI();
-    createDrawingArea();
-    createPreview();
-    createEventListeners();
-
-    resetData();
-
-    //canvas.rect(10 * canvasZoom, 10 * canvasZoom, canvasZoom, canvasZoom, "#ffffff");
-
-    loadMap();
-
-    startWebSocket();
-
-}
-
 function timerHandler() {
     timerLabel.text = "Timer: " + (timerCount--);
     if (timerCount < 0) {
@@ -622,19 +611,39 @@ function timerHandler() {
     }
 }
 
-function loadMap() {
-    $.getJSON("/cells", function(data){
+function loadState() {
+    $.getJSON("/state", function(data){
         //data = $.parseJson(data);
-        fractions = data.fractions;
-        cells = data.cells;
-        renderMap(cells);
+
+        Cells = data.cells;
+
+        updateFractions(data.fractions);
+        updatePlayers(data.players);
+        drawCells(Cells);
     });
 }
 
-function renderMap(cells) {
+function drawCells(cells) {
     $.each(cells, function(i,cell){
         paint2({x: cell.x, y: cell.y, color: cell.color });
     });
+}
+
+function updateFractions(fractions){
+    Fractions = fractions;
+}
+
+function updatePlayers(players){
+    Players = players;
+    var playersContainer = $('#players-container');
+    $.each(players, function(i,player){
+        playersContainer.append('<li> <a href="#"  onClick="$(\'#player\').val(' + player.fraction + '); return false;">' + player.color + '</a></li>')
+    });
+}
+
+function updatePlayer(player){
+    Player = player;
+    $('#player').val(player.color)
 }
 
 
@@ -718,16 +727,12 @@ function onUp(pointer) {
         return;
     }
 
-    var player = $("#player").val();
-    var col = player == "The Red" ? "#ff0000" : "#0000ff";
-    if (data[y][x] == col) {
+    if (data[y][x] == $('#player').val() /*player.color*/) {
         currentX = x;
         currentY = y;
         widthText.text = "Current X: " + currentX;
         heightText.text = "Current Y: " + currentY;
-        activeCellIndication.clear();
-        activeCellIndication.rect(x * canvasZoom + 1, y * canvasZoom + 1, canvasZoom, canvasZoom, '#0f0');
-        activeCellIndication.clear(x * canvasZoom + 2, y * canvasZoom + 2, canvasZoom - 2, canvasZoom - 2, color);
+        activeCellIndication.highLight(x, y);
     }
 }
 
@@ -813,12 +818,10 @@ function onClose(evt) {
 
 function onMessage(evt) {
     console.log(evt);
-    var cells = $.parseJSON(evt.data);
+    var data = $.parseJSON(evt.data);
 
-    if (cells instanceof Array) {
-        $.each(cells, function(i,cell){
-            paint2({x: cell.x, y: cell.y, color: cell.color });
-        });
+    if (data.cells instanceof Array) {
+        drawCells(data.cells);
     }
 }
 
@@ -826,6 +829,11 @@ function onError(evt) {
     console.error(evt)
 }
 
-function doSend(message) {
-    websocket.send(message);
+function doSend(eventName, data) {
+    websocket.send(JSON.stringify(
+        {
+            eventName: eventName,
+            data: data
+        }
+    ));
 }

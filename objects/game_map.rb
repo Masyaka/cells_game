@@ -2,11 +2,11 @@ require_relative 'cell'
 require_relative 'cells_map'
 
 class GameMap < CellsMap
-  attr_accessor :global_state
+  attr_accessor :game_state
   NEUTRAL_COLOR = Cell.neutral_color
 
   def initialize (global_state_p)
-    @global_state = global_state_p
+    @game_state = global_state_p
     super()
   end
 

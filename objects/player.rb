@@ -3,7 +3,13 @@ class Player < GameObject
 
   def to_json
     {
-        fraction_name: self.fraction.name
+        color: self.fraction.color,
+        fraction_name: self.fraction.name,
+        fraction: self.fraction.name
     }
+  end
+
+  def color
+    fraction.color
   end
 end
