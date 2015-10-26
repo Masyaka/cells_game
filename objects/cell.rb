@@ -27,6 +27,6 @@ class Cell < GameObject
         y: y,
         fraction_name: fraction.name,
         color: fraction.color
-    }
+    }.to_json
   end
 end

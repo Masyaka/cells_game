@@ -16,6 +16,9 @@ class CellsGame
     direction = data['direction'] # left/right/top/bottom
     player = game_state.players.find {|s| s.color == data["player_name"]}
 
-    cells.move from_x, from_y, direction, player unless player.nil?
+    unless player.nil?
+      new_cell = cells.move from_x, from_y, direction, player
+      game_state << new_cell
+    end
   end
 end

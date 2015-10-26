@@ -57,5 +57,21 @@ options '/register' do
 end
 
 post '/register' do
-  @request_payload.to_json
+  if @request_payload['email'].nil?
+    return {success: false}.to_json
+  else
+    player = Player.new(email: @request_payload['email'])
+    session[:player] = player
+    game_state.players << player
+    return {success: true}.to_json
+  end
+end
+
+get '/player' do
+  content_type :json
+  session[:player]
+end
+
+get '/*' do
+  redirect '/'
 end

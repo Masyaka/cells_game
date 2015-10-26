@@ -1,1 +1,0 @@
-var IDE_HOOK = false;
