@@ -57,12 +57,11 @@ options '/register' do
 end
 
 post '/register' do
-  if @request_payload['email'].nil?
+  if @request_payload['email'].nil? || @request_payload['color'].nil?
     return {success: false}.to_json
   else
-    player = Player.new(email: @request_payload['email'])
+    player = game_state.create_player(@request_payload['email'], @request_payload['color'])
     session[:player] = player
-    game_state.players << player
     return {success: true}.to_json
   end
 end
