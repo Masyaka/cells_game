@@ -17,8 +17,7 @@ class CellsGame
     player = game_state.players.find {|s| s.color == data["player_name"]}
 
     unless player.nil?
-      new_cell = cells.move from_x, from_y, direction, player
-      game_state << new_cell
+      cells.move from_x, from_y, direction, player
     end
   end
 end

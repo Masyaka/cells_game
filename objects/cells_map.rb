@@ -11,7 +11,10 @@ class CellsMap < Hash
   NEIGHBOUR_COLS = [-1,  0,  1, -1, 1, -1, 0, 1]
 
   def initialize
-    @changes = []
+    @changes = {
+        created: [],
+        removed: []
+    }
   end
 
   # A function to check if a given cell (row, col) can be included in DFS
@@ -109,7 +112,7 @@ class CellsMap < Hash
 
   def cell_created(key, val)
     cell = self[key]
-    @changes << {
+    @changes[:created] << {
         color: cell.color,
         x: cell.x,
         y: cell.y
@@ -125,7 +128,7 @@ class CellsMap < Hash
 
   def cell_deleted(key)
     cell = self[key]
-    @changes << {
+    @changes[:removed] << {
         color: Cell.neutral_color,
         x: cell.x,
         y: cell.y

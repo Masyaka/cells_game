@@ -26,7 +26,7 @@ class GameMap < CellsMap
     new_cell = Cell.new(x:new_x, y:new_y, fraction: player.fraction)
 
     prev_color = self[new_cell.hash].nil? ? NEUTRAL_COLOR : self[new_cell.hash].color
-
+    self << new_cell
     if prev_color != NEUTRAL_COLOR && prev_color != new_cell.color
       clear_islands prev_color
     end
